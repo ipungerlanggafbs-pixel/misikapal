@@ -49,7 +49,7 @@ button:disabled{background:var(--line);color:var(--dim);cursor:default}
 .track{height:1.3rem;background:var(--panel);border-radius:.7rem;overflow:hidden;margin:.5rem 0}
 .track i{display:block;height:100%;width:0;background:var(--brass)}
 .dist{font-size:2.2rem;font-weight:700}
-.al{font-size:2.2rem;font-weight:800;padding:.8rem 1.2rem;border-radius:.8rem;background:var(--bad);visibility:hidden}
+.al{font-size:1.8rem;font-weight:800;padding:.5rem 1rem;border-radius:.8rem;background:var(--bad);visibility:hidden}
 .al.on{visibility:visible;animation:bl 1s steps(2) infinite}
 @keyframes bl{50%{background:#7a2b17}}
 @media (prefers-reduced-motion:reduce){.al.on{animation:none}}
@@ -96,6 +96,7 @@ ol{margin:0;padding-left:2.2rem;font-size:1.9rem;line-height:1.5}
     <div><p class="lab">Menuju pelabuhan</p><div class="track"><i id="pg"></i></div><div class="dist" id="dist"></div></div>
     <div class="al" id="a1">BOCOR!</div>
     <div class="al" id="a2">MESIN MATI!</div>
+    <div class="al" id="a3">PERAIRAN DANGKAL! Kapal melambat</div>
     <div class="crew" id="crew"></div>
   </div>
 </div>
@@ -146,6 +147,7 @@ function draw(st) {
   const { c, W, H, d } = fit($('cv')); if (!W) return;
   const shipY = H * 0.72, SC = H / 230, sx = W / 100;
   c.fillStyle = st.hit ? '#6b1d12' : '#0e3a4d'; c.fillRect(0, 0, W, H);
+  c.fillStyle = 'rgba(224,164,58,.16)'; c.fillRect(0, 0, 0.12 * W, H); c.fillRect(0.88 * W, 0, 0.12 * W, H);   // perairan dangkal
 
   // Garis posisi 25/50/75, sama dengan angka di HP Juru Mudi
   c.strokeStyle = 'rgba(232,241,242,.12)'; c.lineWidth = 1; c.fillStyle = 'rgba(232,241,242,.5)';
@@ -204,6 +206,7 @@ s.on('state', st => {
     $('dist').textContent = Math.max(0, Math.round((1 - st.prog) * FINISH)) + ' m lagi';
     $('a1').classList.toggle('on', st.leak);
     $('a2').classList.toggle('on', st.dead);
+    $('a3').classList.toggle('on', st.shallow);
     $('crew').innerHTML = ROLES.map((r, i) => `<div>${r}<span>${st.players[i] ? esc(st.players[i]) : ''}</span></div>`).join('');
     draw(st);
   }
