@@ -1,8 +1,9 @@
 const http = require('http'), fs = require('fs'), path = require('path');
 const { Server } = require('socket.io');
 
-const FINISH = 1600;    // jarak ke pelabuhan
-const DURATION = 180;   // batas waktu (detik)
+const FINISH = 2000;    // jarak ke pelabuhan
+const DURATION = 180;    // batas waktu (detik): gigi 1-2 terus tidak akan cukup
+const SHALLOW = 12;     // x < 12 atau x > 88 = perairan dangkal (kapal melambat)
 const HEARTS = 3;       // nyawa kapal
 const FUEL = 60;        // BBM awal
 const DT = 1 / 30;      // simulasi 30x per detik
@@ -23,7 +24,7 @@ const newCode = () => {
 };
 const fresh = () => ({
   win: false, reason: '', ship: { x: 50, y: 0, v: 0, vx: 0, t: 1 }, thr: 1, fuel: FUEL, heat: 20,
-  dead: 0, leak: false, leakT: 12, prog: 0, inv: 0, hit: 0, hearts: HEARTS,
+  dead: 0, shallow: false, leak: false, leakT: 12, prog: 0, inv: 0, hit: 0, hearts: HEARTS,
   hits: 0, leakLoss: 0, overheats: 0, time: DURATION, n: 0, held: { L: false, R: false, T: false, D: false }
 });
 
@@ -33,7 +34,9 @@ function makeMap() {
   for (let y = 200; y < FINISH - 80; y += 75) {
     big.push({ x: rnd(10, 90), y: y + rnd(0, 30), r: 6 });
     if (Math.random() < 0.5) big.push({ x: rnd(10, 90), y: y + rnd(0, 30), r: 6 });
-    if (Math.random() < 0.6) small.push({ x: rnd(10, 90), y: y + rnd(0, 40), r: 3 });
+    if (Math.random() < 0.5) big.push({ x: rnd(3, 10), y: y + rnd(0, 30), r: 6 });    // karang di tepi kiri
+    if (Math.random() < 0.5) big.push({ x: rnd(90, 97), y: y + rnd(0, 30), r: 6 });   // karang di tepi kanan
+    if (Math.random() < 0.6) small.push({ x: rnd(5, 95), y: y + rnd(0, 40), r: 3 });
   }
   for (let y = 400; y < FINISH - 200; y += 400) storms.push({ x: rnd(20, 80), y, r: 16, dir: Math.random() < 0.5 ? -1 : 1 });
   return { big, small, storms, all: big.concat(small) };
@@ -44,13 +47,13 @@ function pub(r) {
   return {
     code: r.code, state: r.state, win: r.win, reason: r.reason, players: r.players.map(p => p.name),
     time: Math.max(0, Math.ceil(r.time)), hearts: r.hearts, prog: Math.min(1, S.y / FINISH),
-    x: S.x, y: S.y, v: S.v, leak: r.leak, dead: r.dead > 0, hit: r.hit > 0,
+    x: S.x, y: S.y, v: S.v, leak: r.leak, dead: r.dead > 0, shallow: r.shallow, hit: r.hit > 0,
     hits: r.hits, leakLoss: r.leakLoss, overheats: r.overheats
   };
 }
 const dynOf = r => ({
   x: r.ship.x, y: r.ship.y, fuel: Math.round(r.fuel), heat: Math.round(r.heat), t: r.ship.t,
-  dead: r.dead > 0, leak: r.leak, leakT: Math.ceil(r.leakT), prog: r.prog / 2.5
+  dead: r.dead > 0, shallow: r.shallow, leak: r.leak, leakT: Math.ceil(r.leakT), prog: r.prog / 2.5
 });
 function push(r) {
   io.to(r.hostId).emit('state', pub(r));
@@ -71,7 +74,8 @@ function step(r) {
   r.inv -= DT; r.hit -= DT;
 
   // Kecepatan maju (diatur Kepala Mesin)
-  const tv = t * 8;
+  r.shallow = S.x < SHALLOW || S.x > 100 - SHALLOW;   // menepi = air dangkal, kapal melambat
+  const tv = t * 8 * (r.shallow ? 0.4 : 1);
   S.v += Math.sign(tv - S.v) * Math.min(Math.abs(tv - S.v), 20 * DT);
 
   // Belok kiri/kanan (diatur Juru Mudi)
