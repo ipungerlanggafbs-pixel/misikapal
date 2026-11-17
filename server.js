@@ -1,8 +1,8 @@
 const http = require('http'), fs = require('fs'), path = require('path');
 const { Server } = require('socket.io');
 
-const FINISH = 2000;    // jarak ke pelabuhan
-const DURATION = 180;    // batas waktu (detik): gigi 1-2 terus tidak akan cukup
+const FINISH = 1800;    // jarak ke pelabuhan
+const DURATION = 170;    // batas waktu (detik): gigi 1-2 terus tidak akan cukup
 const SHALLOW = 12;     // x < 12 atau x > 88 = perairan dangkal (kapal melambat)
 const HEARTS = 3;       // nyawa kapal
 const FUEL = 60;        // BBM awal
