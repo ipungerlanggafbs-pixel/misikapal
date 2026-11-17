@@ -1,0 +1,294 @@
+<!DOCTYPE html>
+<html lang="id"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover">
+<meta name="theme-color" content="#0b1d2e">
+<title>Misi Kapal Ekspedisi</title>
+<style>
+:root{--ink:#0b1d2e;--panel:#12293d;--line:#24455f;--foam:#e8f1f2;--dim:#8fa8ba;--ok:#3fb68b;--bad:#e4572e;--acc:#e0a43a}
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+[hidden]{display:none!important}
+html,body{margin:0;height:100%;overflow:hidden;overscroll-behavior:none}
+body{height:100vh;height:100dvh;display:flex;flex-direction:column;gap:8px;
+  font-family:"Avenir Next","Segoe UI",system-ui,sans-serif;background:var(--ink);color:var(--foam);
+  touch-action:none;user-select:none;-webkit-user-select:none;
+  padding:max(10px,env(safe-area-inset-top)) max(10px,env(safe-area-inset-right)) max(10px,env(safe-area-inset-bottom)) max(10px,env(safe-area-inset-left))}
+
+/* Gabung */
+#join{flex:1;display:flex;flex-direction:column;justify-content:center;gap:12px}
+#join h1{margin:0;font-size:28px}
+#join p{margin:0;color:var(--dim)}
+input{font-size:20px;padding:16px;border-radius:14px;border:2px solid var(--line);background:var(--panel);color:var(--foam);width:100%}
+.go{font:800 20px inherit;padding:16px;border:0;border-radius:14px;background:var(--ok);color:#06251a;width:100%}
+#err{color:var(--bad);min-height:1.2em}
+
+/* Game */
+#game{flex:1;min-height:0;display:flex;flex-direction:column;gap:8px}
+.top{display:flex;align-items:baseline;gap:10px}
+.top h1{margin:0;font-size:22px;color:var(--acc)}
+.tip{margin:0;font-size:13px;line-height:1.35;color:var(--dim)}
+.brief{background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:14px;font-size:17px;line-height:1.5;white-space:pre-line}
+.pane{flex:1;min-height:0;display:flex;flex-direction:column;gap:8px}
+.cv{flex:1;min-height:0;position:relative}
+.cv canvas{position:absolute;inset:0;width:100%;height:100%;border-radius:14px;display:block}
+
+.card{background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:10px 12px}
+.row{display:flex;justify-content:space-between;align-items:baseline;font-size:14px;color:var(--dim)}
+.num{font-size:26px;color:var(--foam);font-variant-numeric:tabular-nums}
+.bar{height:10px;background:var(--ink);border-radius:5px;overflow:hidden;margin-top:6px}
+.bar i{display:block;height:100%;width:0;background:var(--ok);transition:width .15s}
+.gauges{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.gears{display:flex;gap:6px;margin-top:8px}
+.gears i{flex:1;height:16px;border-radius:5px;background:var(--ink)}
+.gears i.on{background:var(--acc)}
+.chips{display:flex;gap:8px}
+.chip{flex:1;background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:6px 12px;font-size:13px;color:var(--dim)}
+.chip b{display:block;font-size:22px;color:var(--foam)}
+.stat{display:grid;grid-template-columns:auto 1fr;gap:2px 12px;align-items:center}
+.stat b{font-size:22px}
+.stat span{font-size:13px;color:var(--dim);line-height:1.3}
+.stat .bar{grid-column:1/-1}
+.bad{color:var(--bad)}.ok{color:var(--ok)}
+
+/* Rel posisi Juru Mudi */
+.rail{position:relative;height:28px;background:var(--ink);border-radius:14px;margin:8px 0 18px}
+.rail .tk{position:absolute;top:0;bottom:0;width:1px;background:var(--line)}
+.rail .tk u{position:absolute;top:100%;left:-10px;width:20px;text-align:center;margin-top:2px;font-size:11px;text-decoration:none;color:var(--dim)}
+.rail em{position:absolute;top:-3px;bottom:-3px;width:14px;margin-left:-7px;border-radius:7px;background:var(--acc)}
+
+/* Tombol aksi besar */
+.pad{flex:1;min-height:0;display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.btn{height:100%;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:4px;
+  font:800 22px/1.15 inherit;text-align:center;color:var(--foam);background:var(--panel);
+  border:2px solid var(--line);border-radius:18px;touch-action:none}
+.btn .ar{font-size:44px;line-height:1}
+.btn.on{background:var(--acc);border-color:var(--acc);color:#0b1d2e}
+.btn:active{background:var(--acc);border-color:var(--acc);color:#0b1d2e}
+
+/* Peringatan tepi layar */
+#fx{position:fixed;inset:0;pointer-events:none;border:0 solid var(--bad);z-index:9}
+#fx.on{border-width:6px;animation:bl 1s steps(2) infinite}
+@keyframes bl{50%{border-color:transparent}}
+@media (prefers-reduced-motion:reduce){#fx.on{animation:none}}
+</style></head><body>
+<div id="fx"></div>
+
+<div id="join">
+  <h1>Misi Kapal Ekspedisi</h1>
+  <p>Masukkan nama kamu untuk bergabung</p>
+  <input id="name" placeholder="Nama" maxlength="12" autocomplete="off">
+  <button class="go" id="go">Gabung</button>
+  <p id="err"></p>
+</div>
+
+<div id="game" hidden>
+  <div class="top"><h1 id="role"></h1></div>
+  <p class="tip" id="tip" hidden></p>
+  <div class="brief" id="brief" hidden></div>
+
+  <!-- Navigator -->
+  <div class="pane" id="s0" hidden>
+    <div class="cv"><canvas id="map"></canvas></div>
+    <div class="chips">
+      <div class="chip">Jarak ke pelabuhan<b id="dist">-</b></div>
+      <div class="chip">Posisi kapal<b id="xnav">-</b></div>
+    </div>
+  </div>
+
+  <!-- Juru Mudi -->
+  <div class="pane" id="s1" hidden>
+    <div class="card">
+      <div class="row"><span>Posisi kapal (0 kiri, 100 kanan)</span><b class="num" id="xn">50</b></div>
+      <div class="rail">
+        <i class="tk" style="left:25%"><u>25</u></i><i class="tk" style="left:50%"><u>50</u></i><i class="tk" style="left:75%"><u>75</u></i>
+        <em id="xm" style="left:50%"></em>
+      </div>
+    </div>
+    <div class="pad">
+      <button class="btn" id="bl"><span class="ar">◀</span>KIRI</button>
+      <button class="btn" id="br"><span class="ar">▶</span>KANAN</button>
+    </div>
+  </div>
+
+  <!-- Kepala Mesin -->
+  <div class="pane" id="s2" hidden>
+    <div class="gauges">
+      <div class="card"><div class="row"><span>BBM</span><b class="num" id="fuel">-</b></div><div class="bar"><i id="fb"></i></div></div>
+      <div class="card"><div class="row"><span>Suhu</span><b class="num" id="heat">-</b></div><div class="bar"><i id="hb"></i></div></div>
+    </div>
+    <div class="card">
+      <div class="row"><span>Gigi mesin</span><b class="num" id="gear">-</b></div>
+      <div class="gears" id="gears"></div>
+    </div>
+    <div class="pad">
+      <button class="btn" id="dn"><span class="ar">▼</span>TURUN</button>
+      <button class="btn" id="up"><span class="ar">▲</span>NAIK</button>
+    </div>
+  </div>
+
+  <!-- Kru Teknis -->
+  <div class="pane" id="s3" hidden>
+    <div class="cv" style="flex:5"><canvas id="radar"></canvas></div>
+    <div class="card stat"><b id="st">-</b><span id="sub"></span><div class="bar"><i id="pb"></i></div></div>
+    <div class="pad" style="flex:3">
+      <button class="btn" id="bt">TAMBAL<br>BOCOR</button>
+      <button class="btn" id="bd">DINGINKAN<br>MESIN</button>
+    </div>
+  </div>
+</div>
+
+<script src="/socket.io/socket.io.js"></script>
+<script>
+const NAMA = ['Navigator', 'Juru Mudi', 'Kepala Mesin', 'Kru Teknis'];
+const ACC = ['#6cc4d6', '#e0a43a', '#e4572e', '#3fb68b'];
+const TIP = [
+  'Peta live: karang abu-abu, badai ungu. Sebutkan jarak dan posisi ke tim.',
+  'Kamu tidak melihat laut. Belok sesuai arahan dan sebut posisimu.',
+  'Atur gigi sesuai arahan. Gigi tinggi boros dan panas. Sebut BBM dan suhu ke tim.',
+  'Radar dekat: karang kecil berwarna oranye. Tambal dan dinginkan hanya saat gigi 2 ke bawah.'
+];
+const BRIEF = [
+  'Kamu NAVIGATOR.\nHanya kamu yang melihat peta lengkap: karang abu-abu, badai ungu, dan pelabuhan (garis kuning). Kamu tidak bisa menggerakkan kapal, jadi arahkan Juru Mudi dan Kepala Mesin. Karang kecil tidak tampil di petamu, tanyakan ke Kru Teknis.',
+  'Kamu JURU MUDI.\nHanya kamu yang bisa membelokkan kapal (tahan KIRI atau KANAN). Kamu tidak melihat laut, jadi dengarkan arahan Navigator dan sebutkan posisimu (angka 0 sampai 100).',
+  'Kamu KEPALA MESIN.\nHanya kamu yang mengatur kecepatan (gigi 0 sampai 5). Cepat itu boros BBM dan bikin mesin panas. Kamu tidak melihat laut, jadi tanya Navigator kapan boleh ngebut.',
+  'Kamu KRU TEKNIS.\nRadarmu melihat karang dekat, termasuk karang kecil (oranye). Hanya kamu yang bisa menambal bocor dan mendinginkan mesin, dan itu hanya bisa saat kapal pelan (gigi 2 ke bawah).'
+];
+const $ = id => document.getElementById(id);
+const room = new URLSearchParams(location.search).get('r') || '';
+let token = sessionStorage.getItem('t');
+if (!token) { token = Math.random().toString(36).slice(2); sessionStorage.setItem('t', token); }
+const s = io();
+let joined = false, myName = '', role = -1, map = null, dyn = null, pLeak = false, pDead = false;
+
+document.addEventListener('contextmenu', e => e.preventDefault());
+for (let i = 0; i < 5; i++) $('gears').appendChild(document.createElement('i'));
+
+function doJoin(name) {
+  s.emit('join', { room, name, token }, r => {
+    if (r.err) { $('err').textContent = r.err; return; }
+    joined = true; myName = name;
+    $('join').hidden = true; $('game').hidden = false;
+  });
+}
+$('go').onclick = () => doJoin($('name').value.trim() || 'Peserta');
+s.on('connect', () => { if (joined) doJoin(myName); });
+
+// Tombol yang ditahan
+function bindHold(id, k) {
+  const e = $(id); let on = false;
+  const set = v => {
+    if (on === v) return;
+    on = v; e.classList.toggle('on', v); s.emit('hold', { k, on: v });
+    if (v && navigator.vibrate) navigator.vibrate(15);
+  };
+  e.addEventListener('pointerdown', ev => { ev.preventDefault(); set(true); });
+  ['pointerup', 'pointercancel', 'pointerleave'].forEach(n => e.addEventListener(n, () => set(false)));
+  return set;
+}
+const releasers = [bindHold('bl', 'L'), bindHold('br', 'R'), bindHold('bt', 'T'), bindHold('bd', 'D')];
+document.addEventListener('visibilitychange', () => { if (document.hidden) releasers.forEach(f => f(false)); });
+$('up').addEventListener('pointerdown', e => { e.preventDefault(); s.emit('thr', { d: 1 }); if (navigator.vibrate) navigator.vibrate(15); });
+$('dn').addEventListener('pointerdown', e => { e.preventDefault(); s.emit('thr', { d: -1 }); if (navigator.vibrate) navigator.vibrate(15); });
+
+// Canvas mengikuti ukuran kotaknya, supaya peta selalu pas di layar
+function fit(cv) {
+  const r = cv.getBoundingClientRect(), d = Math.min(window.devicePixelRatio || 1, 2);
+  const w = Math.round(r.width * d), h = Math.round(r.height * d);
+  if (cv.width !== w || cv.height !== h) { cv.width = w; cv.height = h; }
+  return { c: cv.getContext('2d'), W: w, H: h, d };
+}
+function ell(c, x, y, rx, ry) { c.beginPath(); c.ellipse(x, y, rx, ry, 0, 0, 7); c.fill(); }
+function ship(c, x, y, k) {
+  c.fillStyle = '#f8fafc'; c.beginPath();
+  c.moveTo(x, y - 1.5 * k); c.lineTo(x - k, y + k); c.lineTo(x, y + 0.6 * k); c.lineTo(x + k, y + k); c.closePath(); c.fill();
+}
+// Garis bantu: posisi 25/50/75 (sama dengan angka di HP Juru Mudi) dan jarak ke depan
+function guides(c, W, H, d, by, sy, step, ahead) {
+  c.strokeStyle = 'rgba(232,241,242,.13)'; c.lineWidth = 1; c.fillStyle = 'rgba(232,241,242,.55)';
+  c.font = `${11 * d}px system-ui,sans-serif`;
+  [25, 50, 75].forEach(p => {
+    const x = p * W / 100; c.beginPath(); c.moveTo(x, 0); c.lineTo(x, H); c.stroke();
+    c.textAlign = 'center'; c.fillText(p, x, 13 * d);
+  });
+  c.textAlign = 'left';
+  for (let k = step; k <= ahead; k += step) {
+    const y = by - k * sy; if (y < 22 * d) break;
+    c.beginPath(); c.moveTo(0, y); c.lineTo(W, y); c.stroke();
+    c.fillText(k + ' m', 4 * d, y - 3 * d);
+  }
+}
+
+function drawNav() {
+  if (!map || !dyn) return;
+  const { c, W, H, d } = fit($('map')); if (!W) return;
+  const AHEAD = 260, by = H * 0.86, sx = W / 100, sy = by / AHEAD, Y = y => by - (y - dyn.y) * sy;
+  c.fillStyle = '#0e3a4d'; c.fillRect(0, 0, W, H);
+  guides(c, W, H, d, by, sy, 50, AHEAD);
+  c.fillStyle = 'rgba(168,85,247,.5)'; map.storms.forEach(o => ell(c, o.x * sx, Y(o.y), o.r * sx, o.r * sy));
+  c.fillStyle = '#a9bccb'; map.big.forEach(o => ell(c, o.x * sx, Y(o.y), o.r * sx, o.r * sy));
+  const fy = Y(map.finish);
+  c.fillStyle = '#e0a43a'; c.fillRect(0, fy - 4 * d, W, 8 * d);
+  c.font = `bold ${12 * d}px system-ui,sans-serif`; c.fillText('PELABUHAN', 6 * d, fy - 8 * d);
+  ship(c, dyn.x * sx, by, 9 * d);
+}
+function drawRadar() {
+  if (!map || !dyn) return;
+  const { c, W, H, d } = fit($('radar')); if (!W) return;
+  const AHEAD = 100, by = H * 0.84, sx = W / 100, sy = by / AHEAD, Y = y => by - (y - dyn.y) * sy;
+  c.fillStyle = '#082d22'; c.fillRect(0, 0, W, H);
+  guides(c, W, H, d, by, sy, 25, AHEAD);
+  c.fillStyle = '#a9bccb'; map.big.forEach(o => ell(c, o.x * sx, Y(o.y), o.r * sx, o.r * sy));
+  c.fillStyle = '#fb923c'; map.small.forEach(o => ell(c, o.x * sx, Y(o.y), o.r * sx, o.r * sy));
+  ship(c, dyn.x * sx, by, 9 * d);
+}
+
+s.on('map', m => { map = m; });
+s.on('dyn', v => {
+  dyn = v;
+  let alert = false;
+  if (role === 0) {
+    drawNav();
+    $('dist').textContent = Math.max(0, Math.round(map ? map.finish - v.y : 0)) + ' m';
+    $('xnav').textContent = Math.round(v.x);
+  }
+  if (role === 1) {
+    $('xm').style.left = v.x + '%';
+    $('xn').textContent = Math.round(v.x);
+  }
+  if (role === 2) {
+    $('fuel').textContent = v.fuel; $('fb').style.width = (v.fuel / 60 * 100) + '%';
+    $('fb').style.background = v.fuel < 20 ? 'var(--bad)' : 'var(--ok)';
+    $('heat').textContent = v.heat; $('hb').style.width = v.heat + '%';
+    $('hb').style.background = v.heat > 75 ? 'var(--bad)' : v.heat > 50 ? 'var(--acc)' : 'var(--ok)';
+    $('gear').textContent = v.dead ? 'MESIN MATI' : v.t + ' / 5';
+    [...$('gears').children].forEach((e, i) => e.classList.toggle('on', i < v.t));
+    alert = v.dead || v.heat > 85;
+    if (v.dead && !pDead && navigator.vibrate) navigator.vibrate(250);
+  }
+  if (role === 3) {
+    drawRadar();
+    const slow = v.t <= 2;
+    $('st').textContent = v.leak ? `BOCOR ${v.leakT} dtk` : 'Tidak bocor';
+    $('st').className = v.leak ? 'bad' : 'ok';
+    $('sub').textContent = slow ? 'Kapal pelan, kamu bisa bekerja.' : `Kapal terlalu cepat (gigi ${v.t}). Minta Mesin melambat.`;
+    $('pb').style.width = (v.prog * 100) + '%';
+    alert = v.leak;
+    if (v.leak && !pLeak && navigator.vibrate) navigator.vibrate([80, 60, 80]);
+  }
+  pLeak = v.leak; pDead = v.dead;
+  $('fx').classList.toggle('on', alert);
+});
+
+s.on('view', v => {
+  role = v.role;
+  document.documentElement.style.setProperty('--acc', ACC[role]);
+  $('role').textContent = NAMA[role];
+  const play = v.state === 'play';
+  $('tip').hidden = !play; $('tip').textContent = TIP[role];
+  $('brief').hidden = play;
+  if (v.state === 'lobby') $('brief').textContent = `Menunggu pemain (${v.players}/4)\n\n` + BRIEF[role];
+  else if (v.state === 'end') $('brief').textContent = 'Selesai! Lihat layar proyektor.';
+  for (let i = 0; i < 4; i++) $('s' + i).hidden = !(play && i === role);
+  if (!play) { releasers.forEach(f => f(false)); $('fx').classList.remove('on'); }
+});
+</script>
+</body></html>

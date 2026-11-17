@@ -1,0 +1,203 @@
+<!DOCTYPE html>
+<html lang="id"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Misi Kapal Ekspedisi</title>
+<style>
+:root{--ink:#0b1d2e;--panel:#12293d;--line:#24455f;--foam:#e8f1f2;--dim:#8fa8ba;--brass:#e0a43a;--ok:#3fb68b;--bad:#e4572e}
+*{box-sizing:border-box}
+[hidden]{display:none!important}
+html{font-size:min(.9vw,1.6vh)}   /* semua ukuran mengikuti layar proyektor */
+body{margin:0;height:100vh;overflow:hidden;display:flex;flex-direction:column;
+  font-family:"Avenir Next","Segoe UI",system-ui,sans-serif;background:var(--ink);color:var(--foam);padding:2rem 2.4rem}
+header{display:flex;align-items:baseline;gap:1.4rem;margin-bottom:1.4rem}
+header h1{margin:0;font-size:2.8rem}
+header span{font-size:1.5rem;color:var(--dim)}
+.screen{flex:1;min-height:0}
+button{font:800 2rem inherit;padding:1rem 3.2rem;border:0;border-radius:1rem;background:var(--ok);color:#06251a;cursor:pointer}
+button:disabled{background:var(--line);color:var(--dim);cursor:default}
+
+/* Lobby */
+.lobby{display:grid;grid-template-columns:auto 1fr;gap:3.5rem;height:100%;align-content:start}
+.qrbox{background:#fff;padding:1.2rem;border-radius:1.2rem;align-self:start}
+.join .lbl{font-size:1.6rem;color:var(--dim)}
+.join .url{font-size:2.2rem;font-weight:700}
+.code{font-size:7rem;font-weight:800;letter-spacing:.25em;color:var(--brass);line-height:1.1}
+.slots{display:grid;grid-template-columns:1fr 1fr;gap:1rem;margin:1.4rem 0}
+.slot{background:var(--panel);border:2px solid var(--line);border-radius:1rem;padding:1rem 1.4rem}
+.slot.in{border-color:var(--ok)}
+.slot h3{margin:0;font-size:1.8rem}
+.slot p{margin:.2rem 0 .6rem;font-size:1.2rem;color:var(--dim)}
+.slot b{font-size:1.9rem}
+.slot.in b{color:var(--ok)}
+.slot b.wait{color:var(--dim);font-weight:400}
+.note{font-size:1.5rem;color:var(--dim);margin:0 0 1.4rem;line-height:1.5}
+
+/* Permainan */
+.play{display:grid;grid-template-columns:1fr 27rem;gap:2rem;height:100%}
+.sea{position:relative;border-radius:1.2rem;overflow:hidden;background:#0e3a4d}
+.sea canvas{position:absolute;inset:0;width:100%;height:100%;display:block}
+.side{display:flex;flex-direction:column;gap:1.3rem;min-height:0}
+.lab{font-size:1.3rem;color:var(--dim);margin:0}
+.time{font-size:8rem;font-weight:800;line-height:1;font-variant-numeric:tabular-nums}
+.time.low{color:var(--bad)}
+.hearts{font-size:3.2rem;color:var(--bad);letter-spacing:.15em;line-height:1}
+.track{height:1.3rem;background:var(--panel);border-radius:.7rem;overflow:hidden;margin:.5rem 0}
+.track i{display:block;height:100%;width:0;background:var(--brass)}
+.dist{font-size:2.2rem;font-weight:700}
+.al{font-size:2.2rem;font-weight:800;padding:.8rem 1.2rem;border-radius:.8rem;background:var(--bad);visibility:hidden}
+.al.on{visibility:visible;animation:bl 1s steps(2) infinite}
+@keyframes bl{50%{background:#7a2b17}}
+@media (prefers-reduced-motion:reduce){.al.on{animation:none}}
+.crew{margin-top:auto}
+.crew div{background:var(--panel);border-radius:.8rem;padding:.6rem 1rem;margin-top:.5rem;font-size:1.4rem;display:flex;justify-content:space-between;gap:1rem}
+.crew span{color:var(--dim)}
+
+/* Hasil */
+.end{display:flex;flex-direction:column;gap:1.6rem;height:100%}
+.end h2{margin:0;font-size:4.4rem}
+.tiles{display:grid;grid-template-columns:repeat(3,1fr);gap:1.2rem}
+.tile{background:var(--panel);border-radius:1rem;padding:1.2rem 1.6rem}
+.tile b{display:block;font-size:4.4rem;line-height:1.1}
+.tile span{font-size:1.4rem;color:var(--dim)}
+.end h3{margin:0;font-size:2.2rem;color:var(--brass)}
+ol{margin:0;padding-left:2.2rem;font-size:1.9rem;line-height:1.5}
+.end button{align-self:flex-start;margin-top:auto}
+</style></head><body>
+<header><h1>Misi Kapal Ekspedisi</h1><span>Antar kargo ke pelabuhan. Tidak ada satu orang pun yang melihat semuanya.</span></header>
+
+<div class="screen" id="lobby">
+  <div class="lobby">
+    <div class="qrbox"><div id="qr"></div></div>
+    <div class="join">
+      <div class="lbl">Scan QR dengan HP, atau buka</div>
+      <div class="url" id="url"></div>
+      <div class="lbl" style="margin-top:1rem">Kode room</div>
+      <div class="code" id="code">----</div>
+      <div class="slots" id="slots"></div>
+      <p class="note">Beri tim 1 menit untuk berunding sebelum mulai.</p>
+      <button id="start" disabled>Mulai (butuh 4 pemain)</button>
+    </div>
+  </div>
+</div>
+
+<div class="screen play" id="play" hidden>
+  <div class="sea"><canvas id="cv"></canvas></div>
+  <div class="side">
+    <div><p class="lab">Waktu</p><div class="time" id="time">-</div></div>
+    <div class="hearts" id="hearts"></div>
+    <div><p class="lab">Menuju pelabuhan</p><div class="track"><i id="pg"></i></div><div class="dist" id="dist"></div></div>
+    <div class="al" id="a1">BOCOR!</div>
+    <div class="al" id="a2">MESIN MATI!</div>
+    <div class="crew" id="crew"></div>
+  </div>
+</div>
+
+<div class="screen end" id="end" hidden>
+  <h2 id="result"></h2>
+  <div class="tiles">
+    <div class="tile"><b id="eh">0</b><span>Tabrakan karang</span></div>
+    <div class="tile"><b id="el">0</b><span>Nyawa hilang karena bocor telat ditambal</span></div>
+    <div class="tile"><b id="eo">0</b><span>Mesin mati karena kepanasan</span></div>
+  </div>
+  <h3>Bahan diskusi</h3>
+  <ol>
+    <li>Siapa yang punya informasi penting tapi terlambat atau tidak menyampaikannya?</li>
+    <li>Kapan kalian sadar harus saling membantu? Apa yang terjadi sebelum itu?</li>
+    <li>Aba-aba atau kesepakatan apa yang paling membantu, dan apa yang seharusnya disepakati dari awal?</li>
+    <li>Di kantor, di mana kita seperti Juru Mudi yang tidak melihat laut?</li>
+  </ol>
+  <button id="again">Main lagi</button>
+</div>
+
+<script src="/socket.io/socket.io.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+<script>
+const ROLES = ['Navigator', 'Juru Mudi', 'Kepala Mesin', 'Kru Teknis'];
+const DESC = ['Melihat peta, memberi arahan', 'Membelokkan kapal, tidak melihat laut', 'Gigi, BBM, dan suhu mesin', 'Radar dekat, tambal dan dinginkan'];
+const FINISH = 1600, HEARTS = 3;   // harus sama dengan server.js
+const $ = id => document.getElementById(id);
+const esc = t => String(t).replace(/[<>&"']/g, '');
+const s = io();
+let qr = false;
+s.emit('host');
+$('start').onclick = () => s.emit('start');
+$('again').onclick = () => s.emit('again');
+
+function fit(cv) {
+  const r = cv.getBoundingClientRect(), d = Math.min(window.devicePixelRatio || 1, 2);
+  const w = Math.round(r.width * d), h = Math.round(r.height * d);
+  if (cv.width !== w || cv.height !== h) { cv.width = w; cv.height = h; }
+  return { c: cv.getContext('2d'), W: w, H: h, d };
+}
+
+function draw(st) {
+  const { c, W, H, d } = fit($('cv')); if (!W) return;
+  const shipY = H * 0.72, SC = H / 230, sx = W / 100;
+  c.fillStyle = st.hit ? '#6b1d12' : '#0e3a4d'; c.fillRect(0, 0, W, H);
+
+  // Garis posisi 25/50/75, sama dengan angka di HP Juru Mudi
+  c.strokeStyle = 'rgba(232,241,242,.12)'; c.lineWidth = 1; c.fillStyle = 'rgba(232,241,242,.5)';
+  c.font = `${Math.round(H * 0.022)}px system-ui,sans-serif`; c.textAlign = 'center';
+  [25, 50, 75].forEach(p => { c.beginPath(); c.moveTo(p * sx, 0); c.lineTo(p * sx, H); c.stroke(); c.fillText(p, p * sx, H * 0.035); });
+
+  // Ombak bergerak sesuai jarak tempuh
+  c.fillStyle = 'rgba(255,255,255,.14)';
+  for (let i = 0; i < 16; i++) {
+    const y = (i * H / 16 + st.y * SC) % H, x = ((i * 137) % 100) / 100 * W * 0.9;
+    c.fillRect(x, y, W * 0.08, Math.max(2, H * 0.004));
+  }
+
+  // Pelabuhan muncul saat sudah dekat
+  const hy = shipY - (FINISH - st.y) * SC;
+  if (hy > -H * 0.05) {
+    c.fillStyle = '#e0a43a'; c.fillRect(0, hy - H * 0.012, W, H * 0.024);
+    c.fillStyle = '#0b1d2e'; c.font = `bold ${Math.round(H * 0.03)}px system-ui,sans-serif`; c.textAlign = 'center';
+    c.fillText('PELABUHAN', W / 2, hy + H * 0.009);
+  }
+
+  // Kapal dan jejak air
+  const x = st.x * sx, k = H * 0.045;
+  const wake = Math.min(H * 0.25, st.v * SC * 0.5);
+  c.strokeStyle = 'rgba(255,255,255,.45)'; c.lineWidth = Math.max(2, H * 0.005);
+  c.beginPath(); c.moveTo(x - k * 0.7, shipY + k); c.lineTo(x - k * 1.5, shipY + k + wake); c.stroke();
+  c.beginPath(); c.moveTo(x + k * 0.7, shipY + k); c.lineTo(x + k * 1.5, shipY + k + wake); c.stroke();
+  c.fillStyle = st.dead ? '#64748b' : '#f8fafc';
+  c.beginPath(); c.moveTo(x, shipY - 1.6 * k); c.lineTo(x - k, shipY + k); c.lineTo(x, shipY + 0.6 * k); c.lineTo(x + k, shipY + k); c.closePath(); c.fill();
+}
+
+s.on('state', st => {
+  if (!qr) {
+    qr = true;
+    const size = Math.round(parseFloat(getComputedStyle(document.documentElement).fontSize) * 20);
+    new QRCode($('qr'), { text: location.origin + '/play?r=' + st.code, width: size, height: size });
+    $('url').textContent = location.host + '/play';
+    $('code').textContent = st.code;
+  }
+  $('lobby').hidden = st.state !== 'lobby';
+  $('play').hidden = st.state !== 'play';
+  $('end').hidden = st.state !== 'end';
+
+  $('slots').innerHTML = ROLES.map((r, i) => {
+    const n = st.players[i];
+    return `<div class="slot${n ? ' in' : ''}"><h3>${r}</h3><p>${DESC[i]}</p><b class="${n ? '' : 'wait'}">${n ? esc(n) : 'menunggu...'}</b></div>`;
+  }).join('');
+  $('start').disabled = st.players.length < 4;
+
+  if (st.state === 'play') {
+    $('time').textContent = st.time;
+    $('time').classList.toggle('low', st.time <= 30);
+    $('hearts').textContent = '♥'.repeat(Math.max(0, st.hearts)) + '♡'.repeat(Math.max(0, HEARTS - st.hearts));
+    $('pg').style.width = (st.prog * 100) + '%';
+    $('dist').textContent = Math.max(0, Math.round((1 - st.prog) * FINISH)) + ' m lagi';
+    $('a1').classList.toggle('on', st.leak);
+    $('a2').classList.toggle('on', st.dead);
+    $('crew').innerHTML = ROLES.map((r, i) => `<div>${r}<span>${st.players[i] ? esc(st.players[i]) : ''}</span></div>`).join('');
+    draw(st);
+  }
+  if (st.state === 'end') {
+    $('result').textContent = st.reason + (st.win ? '. Misi berhasil!' : '. Misi gagal.');
+    $('eh').textContent = st.hits; $('el').textContent = st.leakLoss; $('eo').textContent = st.overheats;
+  }
+});
+</script>
+</body></html>
