@@ -153,16 +153,16 @@ document.querySelectorAll('img.logo-lg, img.logo-sm').forEach(i => i.src = LOGO)
 const NAMA = ['Navigator', 'Juru Mudi', 'Kepala Mesin', 'Kru Teknis'];
 const ACC = ['#6cc4d6', '#e0a43a', '#e4572e', '#3fb68b'];
 const TIP = [
-  'Peta live: karang abu-abu, badai ungu. Sebutkan jarak dan posisi ke tim.',
+  'Peta live: karang abu-abu, badai ungu, arus lawan oranye. Sebutkan jarak dan posisi ke tim.',
   'Kamu tidak melihat laut. Belok sesuai arahan dan sebut posisimu. Jangan menepi: area merah itu dangkal.',
   'Atur gigi sesuai arahan. Gigi tinggi boros dan panas. Sebut BBM dan suhu ke tim.',
-  'Radar dekat: karang kecil berwarna oranye. Tambal dan dinginkan hanya saat gigi 2 ke bawah.'
+  'Radarmu HANYA melihat karang kecil (oranye). Teriakkan peringatan! Tambal dan dinginkan hanya saat gigi 2 ke bawah.'
 ];
 const BRIEF = [
-  'Kamu NAVIGATOR.\nHanya kamu yang melihat peta lengkap: karang abu-abu, badai ungu, dan pelabuhan (garis kuning). Kamu tidak bisa menggerakkan kapal, jadi arahkan Juru Mudi dan Kepala Mesin. Karang kecil tidak tampil di petamu, tanyakan ke Kru Teknis. Area terang di tepi peta adalah perairan dangkal yang membuat kapal melambat.',
+  'Kamu NAVIGATOR.\nHanya kamu yang melihat peta lengkap: karang abu-abu, badai ungu, dan pelabuhan (garis kuning). Kamu tidak bisa menggerakkan kapal, jadi arahkan Juru Mudi dan Kepala Mesin. Karang kecil tidak tampil di petamu, tanyakan ke Kru Teknis. Area terang di tepi peta adalah perairan dangkal yang membuat kapal melambat. Pita oranye melintang adalah arus lawan: kapal melambat kecuali gigi dinaikkan, jadi kabari Kepala Mesin.',
   'Kamu JURU MUDI.\nHanya kamu yang bisa membelokkan kapal (tahan KIRI atau KANAN). Kamu tidak melihat laut, jadi dengarkan arahan Navigator dan sebutkan posisimu (angka 0 sampai 100). Jangan menepi: area merah di tepi (di bawah 12 dan di atas 88) itu dangkal, kapal jadi lambat dan banyak karang.',
-  'Kamu KEPALA MESIN.\nHanya kamu yang mengatur kecepatan (gigi 0 sampai 5). Cepat itu boros BBM dan bikin mesin panas. Kamu tidak melihat laut, jadi tanya Navigator kapan boleh ngebut. Waktu terbatas: gigi rendah saja tidak akan cukup untuk sampai.',
-  'Kamu KRU TEKNIS.\nRadarmu melihat karang dekat, termasuk karang kecil (oranye). Hanya kamu yang bisa menambal bocor dan mendinginkan mesin, dan itu hanya bisa saat kapal pelan (gigi 2 ke bawah).'
+  'Kamu KEPALA MESIN.\nHanya kamu yang mengatur kecepatan (gigi 0 sampai 5). Cepat itu boros BBM dan bikin mesin panas. Kamu tidak melihat laut, jadi tanya Navigator kapan boleh ngebut. Waktu terbatas: gigi rendah saja tidak akan cukup untuk sampai. Navigator akan memberi tahu kalau ada arus lawan di depan.',
+  'Kamu KRU TEKNIS.\nRadarmu HANYA menampilkan karang kecil (oranye) yang tidak ada di peta Navigator, dan karang besar tidak terlihat di radarmu. Karang kecil bisa muncul tiba-tiba di jalur yang tampak kosong, jadi peringatanmu penting. Hanya kamu yang bisa menambal bocor dan mendinginkan mesin, dan itu hanya bisa saat kapal pelan (gigi 2 ke bawah).'
 ];
 const $ = id => document.getElementById(id);
 const room = new URLSearchParams(location.search).get('r') || '';
@@ -236,6 +236,12 @@ function drawNav() {
   c.fillStyle = '#0e3a4d'; c.fillRect(0, 0, W, H);
   c.fillStyle = 'rgba(224,164,58,.16)'; c.fillRect(0, 0, 0.12 * W, H); c.fillRect(0.88 * W, 0, 0.12 * W, H);
   guides(c, W, H, d, by, sy, 50, AHEAD);
+  (map.currents || []).forEach(cu => {   // arus lawan: hanya terlihat di peta Navigator
+    const y1 = Y(cu.y + cu.len), y2 = Y(cu.y);
+    c.fillStyle = 'rgba(251,146,60,.22)'; c.fillRect(0, y1, W, y2 - y1);
+    c.fillStyle = 'rgba(251,146,60,.9)'; c.font = `bold ${11 * d}px system-ui,sans-serif`; c.textAlign = 'center';
+    c.fillText('ARUS LAWAN ▼▼▼', W / 2, (y1 + y2) / 2 + 4 * d); c.textAlign = 'left';
+  });
   c.fillStyle = 'rgba(168,85,247,.5)'; map.storms.forEach(o => ell(c, o.x * sx, Y(o.y), o.r * sx, o.r * sy));
   c.fillStyle = '#a9bccb'; map.big.forEach(o => ell(c, o.x * sx, Y(o.y), o.r * sx, o.r * sy));
   const fy = Y(map.finish);
@@ -243,15 +249,13 @@ function drawNav() {
   c.font = `bold ${12 * d}px system-ui,sans-serif`; c.fillText('PELABUHAN', 6 * d, fy - 8 * d);
   ship(c, dyn.x * sx, by, 9 * d);
 }
-function drawRadar() {
-  if (!map || !dyn) return;
+function drawRadar() {    // Radar Kru Teknis: HANYA karang kecil (karang besar tidak terlihat)
+  if (!dyn) return;
   const { c, W, H, d } = fit($('radar')); if (!W) return;
-  const AHEAD = 100, by = H * 0.84, sx = W / 100, sy = by / AHEAD, Y = y => by - (y - dyn.y) * sy;
+  const AHEAD = 120, by = H * 0.84, sx = W / 100, sy = by / AHEAD, Y = y => by - (y - dyn.y) * sy;
   c.fillStyle = '#082d22'; c.fillRect(0, 0, W, H);
-  c.fillStyle = 'rgba(224,164,58,.16)'; c.fillRect(0, 0, 0.12 * W, H); c.fillRect(0.88 * W, 0, 0.12 * W, H);
   guides(c, W, H, d, by, sy, 25, AHEAD);
-  c.fillStyle = '#a9bccb'; map.big.forEach(o => ell(c, o.x * sx, Y(o.y), o.r * sx, o.r * sy));
-  c.fillStyle = '#fb923c'; map.small.forEach(o => ell(c, o.x * sx, Y(o.y), o.r * sx, o.r * sy));
+  c.fillStyle = '#fb923c'; (dyn.sm || []).forEach(o => ell(c, o.x * sx, Y(o.y), o.r * sx, o.r * sy));
   ship(c, dyn.x * sx, by, 9 * d);
 }
 
@@ -269,8 +273,8 @@ s.on('dyn', v => {
     $('xn').textContent = Math.round(v.x);
   }
   if (role === 2) {
-    $('fuel').textContent = v.fuel; $('fb').style.width = (v.fuel / 60 * 100) + '%';
-    $('fb').style.background = v.fuel < 20 ? 'var(--bad)' : 'var(--ok)';
+    $('fuel').textContent = v.fuel; $('fb').style.width = (v.fuel / 75 * 100) + '%';
+    $('fb').style.background = v.fuel < 25 ? 'var(--bad)' : 'var(--ok)';
     $('heat').textContent = v.heat; $('hb').style.width = v.heat + '%';
     $('hb').style.background = v.heat > 75 ? 'var(--bad)' : v.heat > 50 ? 'var(--acc)' : 'var(--ok)';
     $('gear').textContent = v.dead ? 'MESIN MATI' : v.t + ' / 5';
