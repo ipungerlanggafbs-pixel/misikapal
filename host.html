@@ -60,13 +60,39 @@ button:disabled{background:var(--line);color:var(--dim);cursor:default}
 /* Hasil */
 .end{display:flex;flex-direction:column;gap:1.6rem;height:100%}
 .end h2{margin:0;font-size:4.4rem}
-.tiles{display:grid;grid-template-columns:repeat(3,1fr);gap:1.2rem}
+.tiles{display:grid;grid-template-columns:repeat(4,1fr);gap:1.2rem}
 .tile{background:var(--panel);border-radius:1rem;padding:1.2rem 1.6rem}
 .tile b{display:block;font-size:4.4rem;line-height:1.1}
 .tile span{font-size:1.4rem;color:var(--dim)}
 .end h3{margin:0;font-size:2.2rem;color:var(--brass)}
 ol{margin:0;padding-left:2.2rem;font-size:1.9rem;line-height:1.5}
-.end button{align-self:flex-start;margin-top:auto}
+button.alt{background:var(--panel);color:var(--foam);border:1px solid var(--line)}
+.btns{margin-top:auto;display:flex;gap:1.2rem}
+body[data-r="1"] .logo{height:3.6rem}
+body[data-r="1"] header span{display:none}
+
+/* Replay */
+.replay{display:flex;flex-direction:column;gap:.9rem;height:100%}
+.rtop{display:flex;align-items:center;gap:2rem;font-size:1.6rem;color:var(--dim)}
+.rtop b{font-size:2.2rem;color:var(--foam);font-variant-numeric:tabular-nums}
+.rh{color:var(--bad);font-size:2rem;letter-spacing:.1em}
+.rev{margin-left:auto;font-size:1.8rem;font-weight:800}
+.rpanels{flex:1;min-height:0;display:grid;grid-template-columns:repeat(4,1fr);gap:1.1rem}
+.rpn{display:flex;flex-direction:column;min-height:0;background:var(--panel);border:1px solid var(--line);border-radius:1rem;padding:.7rem}
+.rpn h3{margin:0 0 .5rem;font-size:1.5rem;display:flex;justify-content:space-between;gap:1rem;color:var(--brass)}
+.rpn h3 span{color:var(--foam);font-weight:400}
+.cvw{position:relative;flex:1;min-height:0}
+.cvw canvas{position:absolute;inset:0;width:100%;height:100%;display:block}
+.rctl{display:flex;align-items:center;gap:.8rem}
+.ck{font-size:1.4rem;padding:.7rem 1.2rem;border-radius:.7rem;background:var(--panel);color:var(--foam);border:1px solid var(--line)}
+.ck.on{background:var(--brass);color:#0b1d2e;border-color:var(--brass)}
+.spd{display:flex;gap:.4rem}
+#tl{position:relative;flex:1;height:2rem;background:var(--panel);border:1px solid var(--line);border-radius:1rem;cursor:pointer;touch-action:none}
+#tlf{position:absolute;left:0;top:0;bottom:0;width:0;background:rgba(224,164,58,.3);border-radius:1rem}
+#tlh{position:absolute;top:-.3rem;bottom:-.3rem;width:.3rem;margin-left:-.15rem;background:#fff;border-radius:.15rem;z-index:2}
+.mk{position:absolute;top:.25rem;bottom:.25rem;width:.45rem;margin-left:-.22rem;border-radius:.2rem}
+.rleg{display:flex;flex-wrap:wrap;gap:.4rem 1.4rem;font-size:1.1rem;color:var(--dim)}
+.rleg i{display:inline-block;width:.8rem;height:.8rem;border-radius:50%;margin-right:.35rem}
 </style></head><body>
 <header>
   <img class="logo" alt="BFI Regional Jatim">
@@ -96,7 +122,7 @@ ol{margin:0;padding-left:2.2rem;font-size:1.9rem;line-height:1.5}
     <div><p class="lab">Menuju pelabuhan</p><div class="track"><i id="pg"></i></div><div class="dist" id="dist"></div></div>
     <div class="al" id="a1">BOCOR!</div>
     <div class="al" id="a2">MESIN MATI!</div>
-    <div class="al" id="a3">PERAIRAN DANGKAL! Kapal melambat</div>
+    <div class="al" id="a3">Kapal melambat</div>
     <div class="crew" id="crew"></div>
   </div>
 </div>
@@ -104,18 +130,42 @@ ol{margin:0;padding-left:2.2rem;font-size:1.9rem;line-height:1.5}
 <div class="screen end" id="end" hidden>
   <h2 id="result"></h2>
   <div class="tiles">
-    <div class="tile"><b id="eh">0</b><span>Tabrakan karang</span></div>
+    <div class="tile"><b id="eh">0</b><span>Tabrakan karang besar (terlihat di peta Navigator)</span></div>
+    <div class="tile"><b id="es">0</b><span>Tabrakan karang kecil (hanya terlihat di radar Kru Teknis)</span></div>
     <div class="tile"><b id="el">0</b><span>Nyawa hilang karena bocor telat ditambal</span></div>
     <div class="tile"><b id="eo">0</b><span>Mesin mati karena kepanasan</span></div>
   </div>
   <h3>Bahan diskusi</h3>
   <ol>
+    <li>Berapa kali kita menabrak karang kecil, dan kenapa peringatan Kru Teknis tidak sampai atau tidak diikuti?</li>
     <li>Siapa yang punya informasi penting tapi terlambat atau tidak menyampaikannya?</li>
     <li>Kapan kalian sadar harus saling membantu? Apa yang terjadi sebelum itu?</li>
     <li>Aba-aba atau kesepakatan apa yang paling membantu, dan apa yang seharusnya disepakati dari awal?</li>
     <li>Di kantor, di mana kita seperti Juru Mudi yang tidak melihat laut?</li>
   </ol>
-  <button id="again">Main lagi</button>
+  <div class="btns"><button id="rp" disabled>Lihat Replay</button><button id="again" class="alt">Main lagi</button></div>
+</div>
+
+<div class="screen replay" id="replay" hidden>
+  <div class="rtop">
+    <span>Replay</span><b id="rtime">0:00 / 0:00</b><span class="rh" id="rhearts"></span>
+    <span class="rev" id="rev"></span>
+  </div>
+  <div class="rpanels" id="rpanels"></div>
+  <div class="rctl">
+    <button class="ck" id="rprev">&#9664; Momen</button>
+    <button class="ck" id="rplay">&#10074;&#10074; Jeda</button>
+    <button class="ck" id="rnext">Momen &#9654;</button>
+    <span class="spd"><button class="ck sp" data-v="1">1x</button><button class="ck sp" data-v="2">2x</button><button class="ck sp" data-v="4">4x</button></span>
+    <div id="tl"><b id="tlf"></b><b id="tlh"></b></div>
+    <button class="ck" id="rback">Kembali</button>
+  </div>
+  <div class="rleg">
+    <span><i style="background:#ef4444"></i>Tabrak karang</span><span><i style="background:#f97316"></i>Nyawa hilang karena bocor</span>
+    <span><i style="background:#a855f7"></i>Mesin mati</span><span><i style="background:#38bdf8"></i>Arus lawan</span>
+    <span><i style="background:#fbbf24"></i>Karang kecil muncul di jalur kosong</span><span><i style="background:#3fb68b"></i>Bocor ditambal</span>
+    <span>Spasi: putar/jeda &nbsp; Panah kiri/kanan: 5 detik &nbsp; N / P: momen berikutnya / sebelumnya &nbsp; 1 2 3: kecepatan</span>
+  </div>
 </div>
 
 <footer>Developed by Regional Coach Jatim</footer>
@@ -132,6 +182,186 @@ const $ = id => document.getElementById(id);
 const esc = t => String(t).replace(/[<>&"']/g, '');
 const s = io();
 let qr = false;
+
+// ---------- REPLAY ----------
+if (!CanvasRenderingContext2D.prototype.roundRect) CanvasRenderingContext2D.prototype.roundRect = function (x, y, w, h) { this.rect(x, y, w, h); };
+let RP = null, inReplay = false, rpT = 0, rpPlaying = false, rpSpeed = 1, rpLast = 0, rpRaf = 0;
+const ACC = ['#6cc4d6', '#e0a43a', '#e4572e', '#3fb68b'];
+const MK = { tabrak: '#ef4444', bocor: '#f97316', mati: '#a855f7', arus: '#38bdf8', jebakan: '#fbbf24', tambal: '#3fb68b' };
+const EVL = e => ({
+  tabrak: 'Tabrak karang ' + e.s, bocor: 'Nyawa hilang: bocor telat ditambal', mati: 'Mesin mati kepanasan',
+  arus: 'Masuk arus lawan', dangkal: 'Masuk perairan dangkal', tambal: 'Bocor berhasil ditambal',
+  jebakan: 'Karang kecil muncul di jalur kosong', sampai: 'Kapal sampai di pelabuhan', gagal: 'Misi gagal'
+}[e.k] || e.k);
+const fmt = t => Math.floor(t / 60) + ':' + String(Math.floor(t % 60)).padStart(2, '0');
+const seek = t => { rpT = Math.max(0, Math.min(RP.dur, t)); };
+
+function getFrame(t) {
+  const F = RP.frames, i = Math.min(F.length - 1, Math.max(0, Math.floor(t * RP.hz)));
+  const a = F[i], b = F[Math.min(F.length - 1, i + 1)];
+  const k = b[0] > a[0] ? Math.min(1, Math.max(0, (t - a[0]) / (b[0] - a[0]))) : 0;
+  const fl = a[6]; let tapU = false, tapD = false;
+  for (let j = Math.max(0, i - 3); j <= i; j++) { if (F[j][6] & 256) tapU = true; if (F[j][6] & 512) tapD = true; }
+  return {
+    t, x: a[1] + (b[1] - a[1]) * k, y: a[2] + (b[2] - a[2]) * k, gear: a[3], fuel: a[4], heat: a[5],
+    dead: !!(fl & 1), leak: !!(fl & 2), L: !!(fl & 16), R: !!(fl & 32), T: !!(fl & 64), D: !!(fl & 128),
+    tapU, tapD, leakT: a[7], prog: a[8], hearts: a[9]
+  };
+}
+
+// --- alat gambar ---
+function rr(c, x, y, w, h, r, fill, stroke) { c.beginPath(); c.roundRect(x, y, w, h, r); if (fill) { c.fillStyle = fill; c.fill(); } if (stroke) { c.strokeStyle = stroke; c.lineWidth = 2; c.stroke(); } }
+function tx(c, str, x, y, size, col, al, wt) { c.font = `${wt || 'normal'} ${size}px system-ui,sans-serif`; c.fillStyle = col || '#e8f1f2'; c.textAlign = al || 'left'; c.fillText(str, x, y); }
+function bar(c, x, y, w, h, f, col) { rr(c, x, y, w, h, h / 2, '#0b1d2e'); if (f > 0.005) rr(c, x, y, Math.max(h, w * Math.min(1, f)), h, h / 2, col); }
+function kbtn(c, x, y, w, h, u, label, on, col) {
+  rr(c, x, y, w, h, 16 * u, on ? col : '#12293d', on ? col : '#24455f');
+  const lines = label.split('\n'), fs = 20 * u;
+  lines.forEach((ln, i) => tx(c, ln, x + w / 2, y + h / 2 + (i - (lines.length - 1) / 2) * fs * 1.15 + fs * 0.35, fs, on ? '#0b1d2e' : '#e8f1f2', 'center', '800'));
+}
+function ell2(c, x, y, rx, ry) { c.beginPath(); c.ellipse(x, y, rx, ry, 0, 0, 7); c.fill(); }
+function ship2(c, x, y, k) { c.fillStyle = '#f8fafc'; c.beginPath(); c.moveTo(x, y - 1.5 * k); c.lineTo(x - k, y + k); c.lineTo(x, y + 0.6 * k); c.lineTo(x + k, y + k); c.closePath(); c.fill(); }
+function guides2(c, W, H, u, by, sy, step, ahead) {
+  c.strokeStyle = 'rgba(232,241,242,.13)'; c.lineWidth = 1; c.fillStyle = 'rgba(232,241,242,.55)'; c.font = `${11 * u}px system-ui,sans-serif`;
+  [25, 50, 75].forEach(p => { const x = p * W / 100; c.beginPath(); c.moveTo(x, 0); c.lineTo(x, H); c.stroke(); c.textAlign = 'center'; c.fillText(p, x, 13 * u); });
+  c.textAlign = 'left';
+  for (let k = step; k <= ahead; k += step) { const y = by - k * sy; if (y < 22 * u) break; c.beginPath(); c.moveTo(0, y); c.lineTo(W, y); c.stroke(); c.fillText(k + ' m', 4 * u, y - 3 * u); }
+}
+
+// --- tampilan HP tiap peran, digambar ulang dari data rekaman ---
+function pNav(c, W, H, u, f) {
+  const mh = H * 0.86, by = mh * 0.86, AHEAD = 260, sx = W / 100, sy = by / AHEAD, Y = y => by - (y - f.y) * sy;
+  c.save(); c.beginPath(); c.roundRect(0, 0, W, mh, 14 * u); c.clip();
+  c.fillStyle = '#0e3a4d'; c.fillRect(0, 0, W, mh);
+  c.fillStyle = 'rgba(224,164,58,.16)'; c.fillRect(0, 0, .12 * W, mh); c.fillRect(.88 * W, 0, .12 * W, mh);
+  guides2(c, W, mh, u, by, sy, 50, AHEAD);
+  RP.map.currents.forEach(cu => { const y1 = Y(cu.y + cu.len), y2 = Y(cu.y); c.fillStyle = 'rgba(251,146,60,.22)'; c.fillRect(0, y1, W, y2 - y1); tx(c, 'ARUS LAWAN ▼▼▼', W / 2, (y1 + y2) / 2 + 4 * u, 11 * u, 'rgba(251,146,60,.9)', 'center', 'bold'); });
+  c.fillStyle = 'rgba(168,85,247,.5)'; RP.map.storms.forEach(o => ell2(c, o.x * sx, Y(o.y), o.r * sx, o.r * sy));
+  c.fillStyle = '#a9bccb'; RP.map.big.forEach(o => ell2(c, o.x * sx, Y(o.y), o.r * sx, o.r * sy));
+  c.fillStyle = '#e0a43a'; c.fillRect(0, Y(RP.map.finish) - 4 * u, W, 8 * u);
+  ship2(c, f.x * sx, by, 9 * u);
+  c.restore();
+  const cy = mh + 8 * u, ch = H - cy;
+  rr(c, 0, cy, W / 2 - 4 * u, ch, 12 * u, '#12293d', '#24455f');
+  rr(c, W / 2 + 4 * u, cy, W / 2 - 4 * u, ch, 12 * u, '#12293d', '#24455f');
+  tx(c, 'Jarak ke pelabuhan', 10 * u, cy + 18 * u, 11 * u, '#8fa8ba');
+  tx(c, Math.max(0, Math.round(RP.map.finish - f.y)) + ' m', 10 * u, cy + 42 * u, 22 * u, '#e8f1f2', 'left', 'bold');
+  tx(c, 'Posisi kapal', W / 2 + 14 * u, cy + 18 * u, 11 * u, '#8fa8ba');
+  tx(c, String(Math.round(f.x)), W / 2 + 14 * u, cy + 42 * u, 22 * u, '#e8f1f2', 'left', 'bold');
+}
+function pMudi(c, W, H, u, f) {
+  rr(c, 0, 0, W, 96 * u, 14 * u, '#12293d', '#24455f');
+  tx(c, 'Posisi kapal (0 kiri, 100 kanan)', 12 * u, 24 * u, 12 * u, '#8fa8ba');
+  tx(c, String(Math.round(f.x)), W - 12 * u, 30 * u, 28 * u, '#e8f1f2', 'right', 'bold');
+  const rx = 12 * u, rw = W - 24 * u, ry = 46 * u, rh = 26 * u;
+  rr(c, rx, ry, rw, rh, rh / 2, '#0b1d2e');
+  c.fillStyle = 'rgba(228,87,46,.55)'; c.fillRect(rx, ry, rw * .12, rh); c.fillRect(rx + rw * .88, ry, rw * .12, rh);
+  [25, 50, 75].forEach(p => { c.fillStyle = '#24455f'; c.fillRect(rx + rw * p / 100, ry, 1, rh); tx(c, String(p), rx + rw * p / 100, ry + rh + 12 * u, 10 * u, '#8fa8ba', 'center'); });
+  rr(c, rx + rw * f.x / 100 - 6 * u, ry - 3 * u, 12 * u, rh + 6 * u, 6 * u, ACC[1]);
+  const by = 108 * u, bh = H - by, bw = (W - 10 * u) / 2;
+  kbtn(c, 0, by, bw, bh, u, '◀\nKIRI', f.L, ACC[1]);
+  kbtn(c, bw + 10 * u, by, bw, bh, u, '▶\nKANAN', f.R, ACC[1]);
+}
+function pMesin(c, W, H, u, f) {
+  const hw = (W - 8 * u) / 2, gh = 64 * u;
+  [['BBM', f.fuel, f.fuel / RP.fuelMax, f.fuel < 25 ? '#e4572e' : '#3fb68b'], ['Suhu', f.heat, f.heat / 100, f.heat > 75 ? '#e4572e' : f.heat > 50 ? '#e0a43a' : '#3fb68b']].forEach(([n, v, fr, col], i) => {
+    const x = i * (hw + 8 * u);
+    rr(c, x, 0, hw, gh, 14 * u, '#12293d', '#24455f');
+    tx(c, n, x + 10 * u, 22 * u, 12 * u, '#8fa8ba'); tx(c, String(v), x + hw - 10 * u, 26 * u, 24 * u, '#e8f1f2', 'right', 'bold');
+    bar(c, x + 10 * u, 40 * u, hw - 20 * u, 10 * u, fr, col);
+  });
+  const gy = gh + 8 * u, gh2 = 74 * u;
+  rr(c, 0, gy, W, gh2, 14 * u, '#12293d', '#24455f');
+  tx(c, 'Gigi mesin', 12 * u, gy + 24 * u, 12 * u, '#8fa8ba');
+  tx(c, f.dead ? 'MESIN MATI' : f.gear + ' / 5', W - 12 * u, gy + 28 * u, 24 * u, f.dead ? '#e4572e' : '#e8f1f2', 'right', 'bold');
+  const sw = (W - 24 * u - 24 * u) / 5;
+  for (let i = 0; i < 5; i++) rr(c, 12 * u + i * (sw + 6 * u), gy + 44 * u, sw, 16 * u, 5 * u, i < f.gear ? ACC[2] : '#0b1d2e');
+  const by = gy + gh2 + 10 * u, bh = H - by, bw = (W - 10 * u) / 2;
+  kbtn(c, 0, by, bw, bh, u, '▼\nTURUN', f.tapD, ACC[2]);
+  kbtn(c, bw + 10 * u, by, bw, bh, u, '▲\nNAIK', f.tapU, ACC[2]);
+}
+function pTek(c, W, H, u, f) {
+  const rh = H * 0.5, by = rh * 0.84, AHEAD = 120, sx = W / 100, sy = by / AHEAD, Y = y => by - (y - f.y) * sy;
+  c.save(); c.beginPath(); c.roundRect(0, 0, W, rh, 14 * u); c.clip();
+  c.fillStyle = '#082d22'; c.fillRect(0, 0, W, rh);
+  guides2(c, W, rh, u, by, sy, 25, AHEAD);
+  c.fillStyle = '#fb923c';
+  RP.map.small.forEach(o => { if (o.t <= f.t && o.y > f.y - 12 && o.y < f.y + 125) ell2(c, o.x * sx, Y(o.y), o.r * sx, o.r * sy); });
+  ship2(c, f.x * sx, by, 9 * u);
+  c.restore();
+  const sy0 = rh + 8 * u, sh = 78 * u;
+  rr(c, 0, sy0, W, sh, 14 * u, '#12293d', '#24455f');
+  tx(c, f.leak ? 'BOCOR ' + f.leakT + ' dtk' : 'Tidak bocor', 12 * u, sy0 + 28 * u, 22 * u, f.leak ? '#e4572e' : '#3fb68b', 'left', 'bold');
+  tx(c, f.gear <= 2 ? 'Kapal pelan, bisa bekerja.' : 'Kapal terlalu cepat (gigi ' + f.gear + ').', 12 * u, sy0 + 48 * u, 12 * u, '#8fa8ba');
+  bar(c, 12 * u, sy0 + 58 * u, W - 24 * u, 9 * u, f.prog, '#38bdf8');
+  const by2 = sy0 + sh + 8 * u, bh = H - by2, bw = (W - 10 * u) / 2;
+  kbtn(c, 0, by2, bw, bh, u, 'TAMBAL\nBOCOR', f.T, ACC[3]);
+  kbtn(c, bw + 10 * u, by2, bw, bh, u, 'DINGINKAN\nMESIN', f.D, ACC[3]);
+}
+const PAN = [pNav, pMudi, pMesin, pTek];   // urut menurut nomor peran
+
+function renderReplay() {
+  if (!RP) return;
+  const f = getFrame(rpT);
+  [0, 1, 3, 2].forEach(r => {
+    const cv = $('rc' + r); if (!cv) return;
+    const { c, W, H } = fit(cv); if (!W) return;
+    c.clearRect(0, 0, W, H); PAN[r](c, W, H, W / 340, f);
+  });
+  $('rtime').textContent = fmt(rpT) + ' / ' + fmt(RP.dur);
+  $('rhearts').textContent = '♥'.repeat(Math.max(0, f.hearts)) + '♡'.repeat(Math.max(0, RP.hearts - f.hearts));
+  const pct = RP.dur ? rpT / RP.dur * 100 : 0;
+  $('tlf').style.width = pct + '%'; $('tlh').style.left = pct + '%';
+  const ev = RP.events.filter(e => e.t <= rpT && rpT - e.t <= 5).pop();
+  $('rev').textContent = ev ? fmt(ev.t) + '   ' + EVL(ev) : '';
+  $('rev').style.color = ev ? (MK[ev.k] || '#e8f1f2') : '';
+  $('rplay').innerHTML = rpPlaying ? '&#10074;&#10074; Jeda' : '&#9654; Putar';
+  document.querySelectorAll('.sp').forEach(b => b.classList.toggle('on', +b.dataset.v === rpSpeed));
+}
+function rpLoop(now) {
+  if (!RP) return;
+  const dt = Math.min(0.1, (now - rpLast) / 1000); rpLast = now;
+  if (rpPlaying) { rpT += dt * rpSpeed; if (rpT >= RP.dur) { rpT = RP.dur; rpPlaying = false; } }
+  renderReplay();
+  rpRaf = requestAnimationFrame(rpLoop);
+}
+function stopReplay() { cancelAnimationFrame(rpRaf); rpRaf = 0; }
+function buildReplay() {
+  $('rpanels').innerHTML = [0, 1, 3, 2].map(r => `<div class="rpn"><h3>${ROLES[r]}<span>${esc(RP.names[r] || '')}</span></h3><div class="cvw"><canvas id="rc${r}"></canvas></div></div>`).join('');
+  $('tl').querySelectorAll('.mk').forEach(m => m.remove());
+  RP.events.filter(e => MK[e.k]).forEach(e => {
+    const m = document.createElement('i'); m.className = 'mk';
+    m.style.left = (e.t / RP.dur * 100) + '%'; m.style.background = MK[e.k]; m.title = fmt(e.t) + ' ' + EVL(e);
+    $('tl').appendChild(m);
+  });
+  rpT = 0; rpPlaying = true; rpSpeed = 1; rpLast = performance.now();
+  cancelAnimationFrame(rpRaf); rpRaf = requestAnimationFrame(rpLoop);
+}
+function jump(dir) {   // loncat ke momen penting (mulai 4 detik sebelum kejadian)
+  const ts = RP.events.filter(e => ['tabrak', 'bocor', 'mati', 'jebakan'].includes(e.k)).map(e => Math.max(0, e.t - 4));
+  const t = dir > 0 ? ts.find(x => x > rpT + 0.2) : [...ts].reverse().find(x => x < rpT - 0.7);
+  if (t !== undefined) { seek(t); rpPlaying = true; }
+}
+s.on('replay', d => { RP = d; $('rp').disabled = false; });
+$('rp').onclick = () => { if (!RP) return; inReplay = true; document.body.dataset.r = '1'; $('end').hidden = true; $('replay').hidden = false; buildReplay(); };
+$('rback').onclick = () => { inReplay = false; stopReplay(); document.body.dataset.r = '0'; $('replay').hidden = true; $('end').hidden = false; };
+$('rplay').onclick = () => { if (rpT >= RP.dur) rpT = 0; rpPlaying = !rpPlaying; };
+$('rprev').onclick = () => jump(-1);
+$('rnext').onclick = () => jump(1);
+document.querySelectorAll('.sp').forEach(b => b.onclick = () => { rpSpeed = +b.dataset.v; });
+const tlEl = $('tl'); let tlDrag = false;
+const tlSeek = e => { const r = tlEl.getBoundingClientRect(); seek((e.clientX - r.left) / r.width * RP.dur); };
+tlEl.addEventListener('pointerdown', e => { if (!RP) return; tlDrag = true; tlEl.setPointerCapture(e.pointerId); tlSeek(e); });
+tlEl.addEventListener('pointermove', e => { if (tlDrag) tlSeek(e); });
+['pointerup', 'pointercancel'].forEach(n => tlEl.addEventListener(n, () => { tlDrag = false; }));
+document.addEventListener('keydown', e => {
+  if (!inReplay || !RP) return;
+  if (e.code === 'Space') { e.preventDefault(); $('rplay').click(); }
+  else if (e.key === 'ArrowLeft') seek(rpT - 5);
+  else if (e.key === 'ArrowRight') seek(rpT + 5);
+  else if (e.key === 'n' || e.key === 'N') jump(1);
+  else if (e.key === 'p' || e.key === 'P') jump(-1);
+  else if (['1', '2', '3'].includes(e.key)) rpSpeed = [1, 2, 4][+e.key - 1];
+});
 s.emit('host');
 $('start').onclick = () => s.emit('start');
 $('again').onclick = () => s.emit('again');
@@ -190,7 +420,9 @@ s.on('state', st => {
   document.body.dataset.s = st.state;
   $('lobby').hidden = st.state !== 'lobby';
   $('play').hidden = st.state !== 'play';
-  $('end').hidden = st.state !== 'end';
+  if (st.state !== 'end') { inReplay = false; stopReplay(); document.body.dataset.r = '0'; if (st.state === 'play') { RP = null; $('rp').disabled = true; } }
+  $('end').hidden = st.state !== 'end' || inReplay;
+  $('replay').hidden = !(st.state === 'end' && inReplay);
 
   $('slots').innerHTML = ROLES.map((r, i) => {
     const n = st.players[i];
@@ -206,13 +438,14 @@ s.on('state', st => {
     $('dist').textContent = Math.max(0, Math.round((1 - st.prog) * FINISH)) + ' m lagi';
     $('a1').classList.toggle('on', st.leak);
     $('a2').classList.toggle('on', st.dead);
-    $('a3').classList.toggle('on', st.shallow);
+    $('a3').textContent = st.shallow ? 'PERAIRAN DANGKAL! Kapal melambat' : 'ARUS LAWAN! Kapal melambat';
+    $('a3').classList.toggle('on', st.shallow || st.current);
     $('crew').innerHTML = ROLES.map((r, i) => `<div>${r}<span>${st.players[i] ? esc(st.players[i]) : ''}</span></div>`).join('');
     draw(st);
   }
   if (st.state === 'end') {
     $('result').textContent = st.reason + (st.win ? '. Misi berhasil!' : '. Misi gagal.');
-    $('eh').textContent = st.hits; $('el').textContent = st.leakLoss; $('eo').textContent = st.overheats;
+    $('eh').textContent = st.hitsBig; $('es').textContent = st.hitsSmall; $('el').textContent = st.leakLoss; $('eo').textContent = st.overheats;
   }
 });
 </script>
